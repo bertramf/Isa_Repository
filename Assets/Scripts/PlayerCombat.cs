@@ -18,7 +18,11 @@ public class PlayerCombat : MonoBehaviour {
     public bool swordActivated;
     private bool goAttack;
     private bool canAttack;
-    private bool isKneeling;
+
+	//Kneel Booleans
+	public bool canKneel;
+	private bool isInKneelState;
+    private bool kneelingAnim;
 
     [Header("Courage Values")]
     public float courageBoost = 4f;
@@ -46,11 +50,12 @@ public class PlayerCombat : MonoBehaviour {
         anim = transform.GetChild(0).GetComponent<Animator>();
 
         canAttack = true;
+		canKneel = true;
     }
 	
 	private void Update () {
         //Attack
-        if (Input.GetButtonDown("X") && canAttack){
+		if (Input.GetButtonDown("X") && canAttack && !isInKneelState){
             goAttack = true;
             StartCoroutine(AttackTimer());
         }
@@ -59,7 +64,7 @@ public class PlayerCombat : MonoBehaviour {
         }
 
         //Ask for help
-        if (Input.GetButtonDown("Y")){
+		if (Input.GetButtonDown("Y") && canKneel){
             StartCoroutine(AskForHelp());
         }
 
@@ -69,8 +74,8 @@ public class PlayerCombat : MonoBehaviour {
 
     private IEnumerator AskForHelp(){
         //Set start values
-        isKneeling = true;
-        canAttack = false;
+		isInKneelState = true;
+        kneelingAnim = true;
         playerMovementScr.canWalk = false;
 
         yield return new WaitForSeconds(0.3f);
@@ -93,8 +98,7 @@ public class PlayerCombat : MonoBehaviour {
 
         //Set end values: hier komt hij alleen als hij klaar is met de timer
         ps_healCharge.Stop();
-        isKneeling = false;
-        canAttack = true;
+        kneelingAnim = false;
         playerMovementScr.canWalk = true;
     }
 
@@ -112,6 +116,7 @@ public class PlayerCombat : MonoBehaviour {
             spriteRenderer.color = Color.Lerp(colorEnd, colorStart, t2);
             yield return null;
         }
+		isInKneelState = false;
     }
 
     private void CheckHit(){
@@ -133,10 +138,10 @@ public class PlayerCombat : MonoBehaviour {
             }
         }
     }
-
+		
     private void AssignAnimations(){
         anim.SetBool("goAttack", goAttack);
-        anim.SetBool("isKneeling", isKneeling);
+        anim.SetBool("isKneeling", kneelingAnim);
     }
 
     private IEnumerator AttackTimer(){
@@ -144,6 +149,10 @@ public class PlayerCombat : MonoBehaviour {
         yield return new WaitForSeconds(attackCooldown);
         canAttack = true;
     }
+
+	public void Hit(){
+
+	}
 
     private void OnDrawGizmos(){
         Vector3 circleCenter3D = new Vector3(xPosSword + transform.position.x, yPosSword + transform.position.y, 0);

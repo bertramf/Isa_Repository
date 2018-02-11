@@ -27,6 +27,7 @@ public class PlayerMovement : MonoBehaviour {
     public float joystickDeadzone = 0.8f;
 
     [Header("Public Jump Values")]
+	public bool delayedJump;
     public int jumpState = 0;
     public float upVelocity = 0f;
     public float jumpStartVelocity = 10;
@@ -71,36 +72,73 @@ public class PlayerMovement : MonoBehaviour {
         else{
             inputHorizontal = 0;
         }
-
-        if (Input.GetButtonDown("A") && grounded){
-            jumpState = 1;
-            upVelocity = jumpStartVelocity;
-        }
-        else if (Input.GetButtonUp("A")){
-            if (rb.velocity.y > 0){
-                StartCoroutine(GravityMultiplier());
-                upVelocity *= 0.4f;
-            }
-        }
-        else{
-            upVelocity = rb.velocity.y;
-        }
-
-        if (grounded){
-            gravityMultiplier = 1;
-        }
-
-        if (rb.velocity.y >= 0){
-            rb.gravityScale = playerStandardGravity * gravityMultiplier;
-        }
-        else if (rb.velocity.y < 0){
-            rb.gravityScale = playerFallGravity * gravityMultiplier;
-        }
-
+			
+		JumpBehaviour ();
+		JumpVisuals ();
         Movement();
         CheckForTurning();
         AssignAnimations();
     }
+
+	private void JumpBehaviour(){
+		if (Input.GetButtonDown("A")){
+			if (grounded) {
+				jumpState = 1;
+				upVelocity = jumpStartVelocity;
+			} 
+			else {
+				StartCoroutine (DelayedJump ());
+			}
+		}
+		else if (Input.GetButtonUp("A")){
+			if (rb.velocity.y > 0){
+				StartCoroutine(GravityMultiplier());
+				upVelocity *= 0.4f;
+			}
+		}
+		else{
+			upVelocity = rb.velocity.y;
+		}
+			
+		if (grounded) {
+			playerCombatScr.canKneel = true;
+			gravityMultiplier = 1;
+		} 
+		else {
+			playerCombatScr.canKneel = false;
+		}
+
+		if (rb.velocity.y >= 0){
+			rb.gravityScale = playerStandardGravity * gravityMultiplier;
+		}
+		else if (rb.velocity.y < 0){
+			rb.gravityScale = playerFallGravity * gravityMultiplier;
+		}
+
+		if(delayedJump){
+			delayedJump = false;
+			if (Input.GetButton ("A")) {
+				jumpState = 1;
+				upVelocity = jumpStartVelocity;
+			} 
+			else {
+				jumpState = 1;
+				upVelocity = jumpStartVelocity * 0.55f;
+			}
+		}
+	}
+		
+	private IEnumerator DelayedJump(){
+		float t = 0;
+		while (t < 1) {
+			t += Time.deltaTime / 0.15f;
+			if (grounded) {
+				delayedJump = true;
+				t = 1;
+			}
+			yield return null;
+		}
+	}
 
     private IEnumerator GravityMultiplier(){
         gravityMultiplier = gravityMultiplierMax;
@@ -112,9 +150,23 @@ public class PlayerMovement : MonoBehaviour {
             t -= Time.deltaTime / gravityMultiplierTime;
             gravityMultiplier = 1 + (t * difference);
             yield return null;
-        }
-       
+        } 
     }
+
+	private void JumpVisuals(){
+		//Animation and Particle Logic
+		if (jumpState == 1 && rb.velocity.y < 3){
+			jumpState = 2;
+		}
+		else if(jumpState == 0 && rb.velocity.y < -2){
+			jumpState = 2;
+		}
+		else if (jumpState == 2 && grounded){
+			psJumpLeft.Play();
+			psJumpRight.Play();
+			jumpState = 0;
+		}
+	}
 
     private void Raycasts(){
         topLeft1 = new Vector2(transform.position.x + ((horLength1 - horOffset1) * lookDirection), transform.position.y + verLength1 / 2 + verOffset1);
@@ -191,17 +243,7 @@ public class PlayerMovement : MonoBehaviour {
         else{
             isWalking = false;
         }
-        if (jumpState == 1 && rb.velocity.y < 3){
-            jumpState = 2;
-        }
-		else if(jumpState == 0 && rb.velocity.y < -2){
-            jumpState = 2;
-        }
-        else if (jumpState == 2 && grounded){
-            psJumpLeft.Play();
-            psJumpRight.Play();
-            jumpState = 0;
-        }
+        
         anim.SetBool("isWalking", isWalking);
         anim.SetInteger("jumpState", jumpState);
     }
