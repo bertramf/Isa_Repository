@@ -29,12 +29,12 @@ public class PlayerMovement : MonoBehaviour {
     [Header("Public Jump Values")]
     public int jumpState = 0;
     public float upVelocity = 0f;
-    public float jumpStartVelocity = 5;
-    public float gravityMultiplierMax = 1.7f;
+    public float jumpStartVelocity = 10;
+    public float gravityMultiplierMax = 1.5f;
     public float gravityMultiplier = 1f;
     public float gravityMultiplierTime = 0.5f;
-    public float playerStandardGravity = 2.4f;
-    public float playerFallGravity = 3.2f;
+    public float playerStandardGravity = 1f;
+    public float playerFallGravity = 1.2f;
 
     [Header("Raycast Values")]
     public LayerMask groundLayer;
@@ -42,17 +42,17 @@ public class PlayerMovement : MonoBehaviour {
     private Vector2 topLeft1;
     private Vector2 bottomRight1;
     public bool groundBefore = false;
-    public float horLength1;
-    public float verLength1;
-    public float horOffset1;
-    public float verOffset1;
+    public float horLength1 = 0.1f;
+    public float verLength1 = 0.5f;
+    public float horOffset1 = -0.1f;
+    public float verOffset1 = -0.5f;
 
     private Vector2 topLeft2;
     private Vector2 bottomRight2;
     public bool grounded = false;
-    public float horLength2;
-    public float verLength2;
-    public float verOffset2;
+    public float horLength2 = 0.35f;
+    public float verLength2 = 0.1f;
+    public float verOffset2 = -0.5f;
 
     private void Start () {
         rb = GetComponent<Rigidbody2D>();
@@ -90,7 +90,7 @@ public class PlayerMovement : MonoBehaviour {
             gravityMultiplier = 1;
         }
 
-        if (rb.velocity.y > 0){
+        if (rb.velocity.y >= 0){
             rb.gravityScale = playerStandardGravity * gravityMultiplier;
         }
         else if (rb.velocity.y < 0){

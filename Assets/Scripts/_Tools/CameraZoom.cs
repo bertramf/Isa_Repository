@@ -9,15 +9,17 @@ public class CameraZoom : MonoBehaviour {
 	void Start () {
         mainCam = GetComponent<Camera>();
 	}
-	
+
 	void Update () {
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            mainCam.orthographicSize -= 0.5f;
-        }
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            mainCam.orthographicSize += 0.5f;
-        }
+		if (mainCam.orthographicSize > 0.5f) {
+			if (Input.GetKeyDown (KeyCode.Equals)) {
+				mainCam.orthographicSize -= 0.5f;
+			}
+		}
+		if(mainCam.orthographicSize < 5f){
+	        if (Input.GetKeyDown(KeyCode.Minus)){
+	            mainCam.orthographicSize += 0.5f;
+	        }
+		}
     }
 }
